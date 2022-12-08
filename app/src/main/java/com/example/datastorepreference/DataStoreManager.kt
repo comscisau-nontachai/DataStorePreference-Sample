@@ -3,10 +3,7 @@ package com.example.datastorepreference
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -18,12 +15,19 @@ class DataStoreManager(context: Context) {
     private val dataStore = context.dataStore
 
     companion object {
-        val strText = stringPreferencesKey(name = "TEXT_KEY")
+        val strTextKey = stringPreferencesKey(name = "TEXT_KEY")
+        val walkModeKey = booleanPreferencesKey(name = "WALK_KEY")
     }
 
     suspend fun setStrText(str: String) {
         dataStore.edit { pref ->
-            pref[strText] = str
+            pref[strTextKey] = str
+        }
+    }
+
+    suspend fun setWalkMode(isWalk: Boolean) {
+        dataStore.edit { pref ->
+            pref[walkModeKey] = isWalk
         }
     }
 
@@ -35,8 +39,19 @@ class DataStoreManager(context: Context) {
                 throw e
             }
         }.map { pref ->
-            val str = pref[strText] ?: "default text"
+            val str = pref[strTextKey] ?: "default text"
             str
         }
+    }
+
+    fun getWalkMode() = dataStore.data.catch { e ->
+        if(e is IOException){
+            emit(emptyPreferences())
+        }else{
+            throw e
+        }
+    }.map { pref ->
+        val data = pref[walkModeKey] ?: true
+        data
     }
 }
